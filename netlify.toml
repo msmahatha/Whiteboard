@@ -1,28 +1,18 @@
 [build]
-  # Build command - use our optimized build script
-  command = "./build.sh"
+  # Build command - use npm run build directly since we're not using complex caching
+  command = "npm run build"
   
   # Output directory (where the built files are placed)
   publish = "dist"
-  
-  # Node.js version
-  environment = { NODE_VERSION = "18.17.0" }
 
 [build.environment]
   # Set Node.js version
   NODE_VERSION = "18.17.0"
   
   # Enable faster builds
-  NPM_FLAGS = "--silent"
-  
-  # Cache node_modules
-  YARN_CACHE_FOLDER = "/opt/buildhome/cache/yarn_cache"
+  NPM_FLAGS = "--silent --no-progress"
 
-# Cache settings for dependencies
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-# Headers for better caching
+# Headers for better caching and security
 [[headers]]
   for = "/*"
   [headers.values]
@@ -32,7 +22,7 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
 
 [[headers]]
-  for = "/static/*"
+  for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
@@ -46,24 +36,8 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Redirects
+# SPA redirect - send all requests to index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-# Build settings for better caching
-[build.processing]
-  skip_processing = false
-  
-[build.processing.css]
-  bundle = true
-  minify = true
-
-[build.processing.js]
-  bundle = true
-  minify = true
-
-[build.processing.html]
-  pretty_urls = true
-  canonical_links = false
