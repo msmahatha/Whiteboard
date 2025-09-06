@@ -1,0 +1,69 @@
+[build]
+  # Build command - use our optimized build script
+  command = "./build.sh"
+  
+  # Output directory (where the built files are placed)
+  publish = "dist"
+  
+  # Node.js version
+  environment = { NODE_VERSION = "18.17.0" }
+
+[build.environment]
+  # Set Node.js version
+  NODE_VERSION = "18.17.0"
+  
+  # Enable faster builds
+  NPM_FLAGS = "--silent"
+  
+  # Cache node_modules
+  YARN_CACHE_FOLDER = "/opt/buildhome/cache/yarn_cache"
+
+# Cache settings for dependencies
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Headers for better caching
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Redirects
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Build settings for better caching
+[build.processing]
+  skip_processing = false
+  
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
+  canonical_links = false

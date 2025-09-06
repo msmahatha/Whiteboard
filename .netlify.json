@@ -1,0 +1,16 @@
+{
+  "cacheDirectories": [
+    "node_modules",
+    ".cache",
+    ".npm"
+  ],
+  "engines": {
+    "node": "18.17.0",
+    "npm": ">=9.0.0"
+  },
+  "buildSettings": {
+    "skipDependencyInstall": false,
+    "useCache": true,
+    "cacheNodeModules": true
+  }
+}
