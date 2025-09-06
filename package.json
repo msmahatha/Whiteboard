@@ -1,8 +1,12 @@
 {
   "name": "whiteboard",
+  "description": "A feature-rich, production-ready collaborative whiteboard application built with React and TypeScript",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "keywords": ["whiteboard", "drawing", "canvas", "collaboration", "react", "typescript"],
+  "author": "WhiteBoard Team",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

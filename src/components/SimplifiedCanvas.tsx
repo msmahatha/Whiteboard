@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, forwardRef } from 'react';
 import { useWhiteboardStore } from '../store/whiteboardStore';
 import { TextEditor } from './TextEditor';
 import { ResizeHandles } from './ResizeHandles';
@@ -9,8 +9,9 @@ interface SimplifiedCanvasProps {
   height: number;
 }
 
-export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, height }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+export const SimplifiedCanvas = forwardRef<HTMLCanvasElement, SimplifiedCanvasProps>(({ width, height }, ref) => {
+  const internalCanvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = (ref as React.RefObject<HTMLCanvasElement>) || internalCanvasRef;
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
   const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>([]);
@@ -624,4 +625,4 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
       </div>
     </div>
   );
-};
+});

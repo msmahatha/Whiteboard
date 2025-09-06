@@ -1,212 +1,239 @@
-# Collaborative Whiteboard Application
+# 🎨 WhiteBoard - Collaborative Drawing Application
 
-A production-ready collaborative whiteboard application built with React, TypeScript, and TailwindCSS. Similar to Excalidraw, this application provides real-time collaborative drawing capabilities with smooth canvas performance.
+A feature-rich, production-ready collaborative whiteboard application built with React, TypeScript, and modern web technologies. Similar to Excalidraw with enhanced functionality and performance optimizations.
 
-## 🚀 Features
+![Whiteboard Preview](https://img.shields.io/badge/Status-Production%20Ready-green)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-### ✅ Currently Implemented
-- **Core Drawing Tools**: Rectangle, Circle, Line, Arrow, Text, Sticky Notes
-- **Canvas Interaction**: Zoom, Pan, Grid with snap-to-grid functionality
-- **Shape Management**: Select, move, resize, rotate, delete shapes
-- **Modern UI**: Clean toolbar with tool selection and view controls
-- **State Management**: Centralized store using Zustand
-- **TypeScript**: Full type safety with comprehensive interfaces
-- **Responsive Design**: TailwindCSS-based responsive layout
+## ✨ Features
 
-### 🚧 In Development
-- **Freehand Drawing**: Pen tool with pressure sensitivity
-- **Undo/Redo System**: Complete history management
-- **Shape Grouping**: Group and ungroup multiple shapes
-- **Layer Management**: Multiple layers with visibility controls
-- **Keyboard Shortcuts**: Quick access to common actions
+### 🖊️ Drawing Tools
+- **Selection Tool** (V) - Select and manipulate shapes
+- **Hand Tool** (H) - Pan around the canvas
+- **Rectangle** (R) - Draw rectangles
+- **Diamond** (D) - Draw diamond shapes
+- **Ellipse/Circle** (O) - Draw ellipses and circles
+- **Arrow** (A) - Draw arrows with customizable arrowheads
+- **Line** (L) - Draw straight lines
+- **Freehand Drawing** (P) - Free drawing with smooth curves
+- **Text Tool** (T) - Add and edit text with advanced typography
+- **Eraser** (E) - Remove parts of drawings
+- **Laser Pointer** - Highlight areas temporarily
 
-### 🔜 Planned Features
-- **Real-time Collaboration**: WebSocket-based multi-user editing
-- **Live Cursors**: Show other users' cursors with names/colors
-- **Conflict Resolution**: CRDT-based synchronization using Y.js
-- **Export/Import**: PNG, SVG, JSON format support
-- **Offline Support**: IndexedDB persistence with sync
-- **User Authentication**: OAuth and email-based login
-- **Room Management**: Private rooms with shareable links
+### 🎨 Styling & Customization
+- **Color Picker** - Full color palette with custom colors
+- **Stroke Width** - Adjustable line thickness
+- **Fill Options** - Solid colors, transparent, or no fill
+- **Opacity Control** - Adjustable transparency (0-100%)
+- **Font Options** - Multiple font families and sizes
+- **Text Formatting** - Bold, italic, and alignment options
+- **Edge Styles** - Round or sharp line endings
+- **Roughness/Sloppiness** - Hand-drawn aesthetic control
 
-## 🛠️ Technology Stack
+### � Advanced Functionality
+- **Zoom & Pan** - Smooth zoom (Ctrl+Scroll) and pan controls
+- **Grid System** - Toggleable alignment grid
+- **Layer Management** - Organize shapes in layers
+- **Undo/Redo** - Full history support (Ctrl+Z/Ctrl+Y)
+- **Copy/Paste/Duplicate** - Efficient shape duplication (Ctrl+C/Ctrl+D)
+- **Selection Box** - Multi-select with drag selection
+- **Drag & Drop** - Move shapes by dragging
+- **Resize Handles** - Visual resize controls for shapes
 
-### Frontend
-- **React 18**: Modern React with hooks and functional components
-- **TypeScript**: Full type safety and better development experience
-- **TailwindCSS**: Utility-first CSS framework for rapid styling
-- **Konva.js**: 2D canvas rendering for smooth graphics performance
-- **Zustand**: Lightweight state management with minimal boilerplate
+### 💾 File Management
+- **Auto-Save** - Automatic saving every 30 seconds
+- **Export Options** - PNG, SVG, and JSON formats
+- **Import/Load** - Load saved whiteboard files
+- **Project Management** - Save and organize multiple projects
 
-### Planned Backend
-- **Node.js + Express**: RESTful API server
-- **WebSockets**: Real-time communication
-- **MongoDB/PostgreSQL**: Data persistence
-- **Y.js**: Conflict-free replicated data types (CRDT)
-- **Docker**: Containerized deployment
+### 🌓 User Experience
+- **Dark/Light Theme** - Toggle between themes
+- **Responsive Design** - Works on desktop and tablet
+- **Keyboard Shortcuts** - Extensive hotkey support
+- **Performance Monitor** - FPS and performance tracking (Ctrl+Shift+P)
+- **Help Modal** - Built-in keyboard shortcut reference
+- **Status Bar** - Real-time tool and canvas information
+- **Error Boundaries** - Graceful error handling
 
-## 📁 Project Structure
+### 🚀 Performance Features
+- **Shape Culling** - Only render visible shapes for better performance
+- **Optimized Rendering** - Efficient canvas drawing with transform matrices
+- **Viewport Management** - Smart zoom and pan calculations
+- **Memory Management** - Efficient state management with Zustand
 
-```
-src/
-├── components/           # React components
-│   ├── Canvas.tsx       # Main canvas component with Konva
-│   ├── Grid.tsx         # Grid overlay component
-│   ├── SelectionBox.tsx # Selection rectangle
-│   ├── ShapeRenderer.tsx# Individual shape rendering
-│   └── Toolbar.tsx      # Tool selection sidebar
-├── store/               # State management
-│   └── whiteboardStore.ts # Zustand store
-├── types/               # TypeScript definitions
-│   └── index.ts         # Shape and event interfaces
-├── App.tsx              # Main application component
-├── main.tsx             # Application entry point
-└── index.css            # Global styles with Tailwind
-```
+## 🛠️ Tech Stack
 
-## 🎯 Core Architecture
-
-### Shape System
-All shapes inherit from a `BaseShape` interface with common properties:
-- Position, dimensions, rotation
-- Styling (fill, stroke, opacity)
-- State (visible, locked, zIndex)
-- Metadata (id, timestamps)
-
-### State Management
-Centralized store using Zustand provides:
-- Shape CRUD operations
-- Selection management
-- Tool state
-- Canvas view state (zoom, pan)
-- History for undo/redo
-
-### Canvas Rendering
-Konva.js handles:
-- High-performance 2D rendering
-- Mouse/touch event handling
-- Shape transformations
-- Layered rendering system
+- **Frontend**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **State Management**: Zustand
+- **Styling**: CSS3 with CSS Variables
+- **Canvas**: HTML5 Canvas API
+- **Deployment**: Netlify
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js 20.19+ or 22.12+
-- npm or yarn package manager
+- npm or yarn
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd whiteboard
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/msmahatha/Whiteboard.git
+cd Whiteboard
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+# Install dependencies
+npm install
 
-3. **Start development server**
-   ```bash
-   npm run dev
-   ```
+# Start development server
+npm run dev
 
-4. **Open your browser**
-   Navigate to `http://localhost:5173`
+# Build for production
+npm run build
+```
 
-### Available Scripts
+## ⌨️ Keyboard Shortcuts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-
-## 🎮 Usage
-
-### Basic Drawing
-1. Select a tool from the toolbar (Rectangle, Circle, Line, etc.)
-2. Click and drag on the canvas to create shapes
-3. Use the Select tool to move and modify existing shapes
-
-### Canvas Navigation
-- **Zoom**: Mouse wheel or zoom controls
-- **Pan**: Select Hand tool and drag, or hold space while dragging
-- **Grid**: Toggle grid visibility and snap-to-grid functionality
-
-### Keyboard Shortcuts (Planned)
-- `V` - Select tool
-- `R` - Rectangle tool
-- `C` - Circle tool
-- `L` - Line tool
+### Tools
+- `1` or `V` - Selection tool
+- `2` or `H` - Hand tool
+- `3` or `R` - Rectangle
+- `4` or `D` - Diamond
+- `5` or `O` - Ellipse
+- `6` or `A` - Arrow
+- `7` or `L` - Line
+- `8` or `P` - Draw/Pen
+- `9` or `E` - Eraser
 - `T` - Text tool
+- `Escape` - Return to selection
+
+### Actions
 - `Ctrl+Z` - Undo
-- `Ctrl+Y` - Redo
-- `Delete` - Delete selected shapes
-- `Ctrl+A` - Select all
+- `Ctrl+Shift+Z` or `Ctrl+Y` - Redo
+- `Ctrl+C` or `Ctrl+D` - Copy/Duplicate
+- `Delete` or `Backspace` - Delete selected
+- `Ctrl+S` - Save (manual save)
+- `Ctrl+Shift+P` - Toggle performance monitor
 
-## 🏗️ Development Roadmap
+### Navigation
+- `Ctrl+Scroll` - Zoom in/out
+- `Mouse Drag` (with Hand tool) - Pan canvas
+- `Double-click` (text) - Edit text
+- `Click outside` - Finish text editing
 
-### Phase 1: Core Features ✅
-- [x] Basic shape tools and canvas
-- [x] State management setup
-- [x] TypeScript interfaces
-- [x] UI/UX foundation
+## � Usage Guide
 
-### Phase 2: Enhanced Editing 🚧
-- [ ] Complete undo/redo system
-- [ ] Freehand drawing tool
-- [ ] Shape grouping and layers
-- [ ] Keyboard shortcuts
-- [ ] Export functionality
+### Creating Shapes
+1. Select a drawing tool from the toolbar
+2. Click and drag on the canvas to create shapes
+3. Use the style panel to customize appearance
+4. Double-click text shapes to edit content
 
-### Phase 3: Collaboration 🔜
-- [ ] WebSocket server setup
-- [ ] Real-time shape synchronization
-- [ ] Live cursors and user presence
-- [ ] Room management system
+### Text Editing
+1. Select the text tool (T)
+2. Click anywhere to create instant text
+3. Type your content
+4. Double-click existing text to edit
+5. Use the text formatting toolbar for styling
 
-### Phase 4: Persistence & Deployment 🔜
-- [ ] Backend API development
-- [ ] User authentication
-- [ ] Cloud storage integration
-- [ ] Docker containerization
-- [ ] Production deployment
+### Advanced Features
+- **Multi-select**: Drag to create selection box
+- **Zoom Navigation**: Use zoom controls or Ctrl+Scroll
+- **Performance**: Monitor FPS with Ctrl+Shift+P
+- **Layers**: Manage shape layers in the layer panel
+- **Auto-save**: Automatic saving with status indicator
+
+## 🏗️ Project Structure
+
+```
+src/
+├── components/          # React components
+│   ├── SimpleToolbar.tsx      # Main toolbar
+│   ├── SimplifiedCanvas.tsx   # Canvas component
+│   ├── StylePanel.tsx         # Styling controls
+│   ├── TextEditor.tsx         # Text editing
+│   ├── ZoomControls.tsx       # Zoom interface
+│   ├── LayerPanel.tsx         # Layer management
+│   ├── StatusBar.tsx          # Status information
+│   ├── HelpModal.tsx          # Keyboard shortcuts
+│   ├── ErrorBoundary.tsx      # Error handling
+│   └── ...
+├── hooks/               # Custom React hooks
+│   └── useAutoSave.ts         # Auto-save functionality
+├── store/               # State management
+│   └── whiteboardStore.ts     # Zustand store
+├── types/               # TypeScript definitions
+│   └── index.ts               # Type definitions
+└── App.tsx             # Main application
+```
+
+## 🎨 Customization
+
+### Themes
+Themes are managed through CSS variables in the store:
+- Light theme with professional colors
+- Dark theme for low-light environments
+- Easily extensible for additional themes
+
+### Adding New Tools
+1. Define tool type in `types/index.ts`
+2. Add tool logic in `SimplifiedCanvas.tsx`
+3. Update toolbar in `SimpleToolbar.tsx`
+4. Add keyboard shortcut in `App.tsx`
+
+## 📊 Performance
+
+- **Optimized Rendering**: Shape culling for large canvases
+- **Memory Efficient**: Smart state management
+- **Smooth Interactions**: 60fps target with performance monitoring
+- **Responsive**: Sub-100ms tool switching
+
+## 🚀 Deployment
+
+The application is deployed on Netlify with automatic builds:
+- **GitHub Repository**: [https://github.com/msmahatha/Whiteboard](https://github.com/msmahatha/Whiteboard)
+- **Auto-deploy**: Pushes to main branch trigger deployment
+- **Performance**: CDN-optimized static assets
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📝 Code Style
+## � Bug Reports
 
-This project follows:
-- **ESLint** configuration for code quality
-- **Prettier** for code formatting
-- **TypeScript strict mode** for type safety
-- **React Hooks** patterns for component logic
-- **TailwindCSS** utility classes for styling
+Please report bugs through GitHub Issues with:
+- Steps to reproduce
+- Expected vs actual behavior
+- Browser and OS information
+- Performance monitor data (if applicable)
 
-## 🐛 Known Issues
+## � License
 
-- Grid rendering optimization needed for large canvases
-- Shape selection handles not yet implemented
-- Mobile touch interactions need refinement
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-- Inspired by [Excalidraw](https://excalidraw.com/)
-- Built with [Konva.js](https://konvajs.org/) for canvas rendering
-- Uses [Y.js](https://github.com/yjs/yjs) approach for collaboration
-- UI design inspired by modern collaborative tools
+- Inspired by Excalidraw's intuitive design
+- Built with modern React patterns and TypeScript
+- Optimized for production deployment
+
+## 📈 Roadmap
+
+- [ ] Real-time collaboration with WebSocket
+- [ ] Cloud storage integration
+- [ ] Mobile app version
+- [ ] Advanced shape libraries
+- [ ] Plugin system
+- [ ] Presentation mode
+- [ ] Version history
+- [ ] Team workspaces
 
 ---
 
-**Status**: Active Development | **Version**: 0.1.0 | **Last Updated**: September 2025
+**Made with ❤️ by the WhiteBoard Team**

@@ -75,15 +75,19 @@ export const TextEditor: React.FC<TextEditorProps> = ({
 
   const handleFinish = useCallback(() => {
     const finalFontFamily = `${fontFamily}${isItalic ? ' italic' : ''}`;
+    
+    // Don't save completely empty text - either keep original or set a space
+    const finalText = text.trim() || 'Text';
+    
     const updates: Partial<TextShape> = {
-      text: text.trim(),
+      text: finalText,
       fontSize,
       fontFamily: finalFontFamily,
       fontWeight: isBold ? 'bold' : 'normal',
       textAlign,
       // Calculate new dimensions based on text content
-      width: Math.max(100, text.length * fontSize * 0.6),
-      height: Math.max(fontSize + 10, (text.split('\n').length) * fontSize * 1.2 + 10)
+      width: Math.max(100, finalText.length * fontSize * 0.6),
+      height: Math.max(fontSize + 10, (finalText.split('\n').length) * fontSize * 1.2 + 10)
     };
     
     onUpdate(updates);

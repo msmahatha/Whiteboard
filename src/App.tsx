@@ -1,22 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SimpleToolbar } from './components/SimpleToolbar';
 import { SimplifiedCanvas } from './components/SimplifiedCanvas';
+import { HelpModal } from './components/HelpModal';
+import { LayerPanel } from './components/LayerPanel';
+import { StatusBar } from './components/StatusBar';
+import { ZoomControls } from './components/ZoomControls';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { useWhiteboardStore } from './store/whiteboardStore';
 import './App.css';
 
 function App() {
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  const { theme, setTool, undo, redo } = useWhiteboardStore();
+  const { theme, setTool, undo, redo, duplicateSelectedShapes, deleteSelectedShapes } = useWhiteboardStore();
 
   useEffect(() => {
     const updateCanvasSize = () => {
       const toolbarHeight = 70;
+      const statusBarHeight = 32;
       const padding = 20;
 
       setCanvasSize({
         width: window.innerWidth - padding,
-        height: window.innerHeight - toolbarHeight - padding,
+        height: window.innerHeight - toolbarHeight - statusBarHeight - padding,
       });
     };
 
@@ -49,11 +57,26 @@ function App() {
             e.preventDefault();
             redo();
             break;
+          case 'c':
+            e.preventDefault();
+            duplicateSelectedShapes();
+            break;
+          case 'd':
+            e.preventDefault();
+            duplicateSelectedShapes();
+            break;
           case 's':
             e.preventDefault();
             // TODO: Implement save
             break;
         }
+        return;
+      }
+
+      // Handle delete key
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        deleteSelectedShapes();
         return;
       }
 
@@ -129,31 +152,49 @@ function App() {
   console.log('Full App rendering, theme:', theme, 'canvasSize:', canvasSize);
 
   return (
-    <div style={{
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: theme === 'light' ? '#ffffff' : '#1f2937',
-      color: theme === 'light' ? '#000000' : '#ffffff'
-    }}>
-      {/* Toolbar */}
-      <SimpleToolbar />
-      
-      {/* Canvas Area */}
-      <main style={{
-        flex: 1,
-        position: 'relative',
-        backgroundColor: theme === 'light' ? '#f9fafb' : '#111827',
+    <ErrorBoundary>
+      <div style={{
+        height: '100vh',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        flexDirection: 'column',
+        backgroundColor: theme === 'light' ? '#ffffff' : '#1f2937',
+        color: theme === 'light' ? '#000000' : '#ffffff'
       }}>
-                <SimplifiedCanvas 
-          width={canvasSize.width} 
-          height={canvasSize.height} 
-        />
-      </main>
-    </div>
+        {/* Toolbar */}
+        <SimpleToolbar />
+        
+        {/* Canvas Area */}
+        <main style={{
+          flex: 1,
+          position: 'relative',
+          backgroundColor: theme === 'light' ? '#f9fafb' : '#111827',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <SimplifiedCanvas 
+            ref={canvasRef}
+            width={canvasSize.width} 
+            height={canvasSize.height}
+          />
+          
+          {/* Zoom Controls */}
+          <ZoomControls canvasRef={canvasRef} />
+          
+          {/* Layer Panel */}
+          <LayerPanel />
+          
+          {/* Help Modal */}
+          <HelpModal />
+          
+          {/* Performance Monitor */}
+          <PerformanceMonitor />
+        </main>
+        
+        {/* Status Bar */}
+        <StatusBar />
+      </div>
+    </ErrorBoundary>
   );
 }
 

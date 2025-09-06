@@ -23,7 +23,10 @@ export const SimpleToolbar: React.FC = () => {
     clearCanvas,
     undo,
     redo,
-    currentColor
+    currentColor,
+    selectedShapeIds,
+    duplicateSelectedShapes,
+    deleteSelectedShapes
   } = useWhiteboardStore();
 
   const toolsConfig = [
@@ -266,6 +269,52 @@ export const SimpleToolbar: React.FC = () => {
           title="Redo (Ctrl+Y)"
         >
           ↷ Redo
+        </button>
+
+        {/* Copy Button */}
+        <button
+          onClick={duplicateSelectedShapes}
+          disabled={selectedShapeIds.length === 0}
+          style={{
+            padding: '8px 12px',
+            border: `1px solid ${theme === 'light' ? '#d1d5db' : '#4b5563'}`,
+            borderRadius: '6px',
+            backgroundColor: selectedShapeIds.length === 0 
+              ? (theme === 'light' ? '#f3f4f6' : '#2d3748')
+              : (theme === 'light' ? '#ffffff' : '#374151'),
+            color: selectedShapeIds.length === 0 
+              ? (theme === 'light' ? '#9ca3af' : '#6b7280')
+              : (theme === 'light' ? '#374151' : '#f9fafb'),
+            cursor: selectedShapeIds.length === 0 ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            transition: 'all 0.2s ease'
+          }}
+          title="Duplicate Selected (Ctrl+D)"
+        >
+          📋 Copy
+        </button>
+
+        {/* Delete Button */}
+        <button
+          onClick={deleteSelectedShapes}
+          disabled={selectedShapeIds.length === 0}
+          style={{
+            padding: '8px 12px',
+            border: `1px solid ${theme === 'light' ? '#d1d5db' : '#4b5563'}`,
+            borderRadius: '6px',
+            backgroundColor: selectedShapeIds.length === 0 
+              ? (theme === 'light' ? '#f3f4f6' : '#2d3748')
+              : (theme === 'light' ? '#fef2f2' : '#7f1d1d'),
+            color: selectedShapeIds.length === 0 
+              ? (theme === 'light' ? '#9ca3af' : '#6b7280')
+              : (theme === 'light' ? '#dc2626' : '#fca5a5'),
+            cursor: selectedShapeIds.length === 0 ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            transition: 'all 0.2s ease'
+          }}
+          title="Delete Selected (Delete)"
+        >
+          🗑️ Delete
         </button>
 
         <button
