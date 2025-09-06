@@ -1,5 +1,8 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useWhiteboardStore } from '../store/whiteboardStore';
+import { TextEditor } from './TextEditor';
+import { ResizeHandles } from './ResizeHandles';
+import type { TextShape } from '../types';
 
 interface SimplifiedCanvasProps {
   width: number;
@@ -11,7 +14,12 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
   const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>([]);
-  const [editingTextId, setEditingTextId] = useState<string | null>(null);  const {
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedShapeId, setDraggedShapeId] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isTextEditing, setIsTextEditing] = useState(false);
+  const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);  const {
     tool,
     theme,
     gridEnabled,
@@ -39,6 +47,23 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
       y: ((e.clientY - rect.top) * canvas.height) / rect.height
     };
   }, []);
+
+  // Find shape under mouse position
+  const getShapeUnderMouse = useCallback((pos: { x: number; y: number }) => {
+    // Check shapes in reverse order (top to bottom) to get the topmost shape
+    const shapeArray = Object.values(shapes).sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0));
+    
+    for (const shape of shapeArray) {
+      if (!shape.visible || shape.locked) continue;
+      
+      // Check if point is inside shape bounds
+      if (pos.x >= shape.x && pos.x <= shape.x + shape.width &&
+          pos.y >= shape.y && pos.y <= shape.y + shape.height) {
+        return shape;
+      }
+    }
+    return null;
+  }, [shapes]);
 
   // Clear and redraw canvas
   const redrawCanvas = useCallback(() => {
@@ -206,294 +231,79 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
 
   // Start text editing
   const startTextEditing = useCallback((shapeId: string) => {
-    const shape = shapes[shapeId];
-    if (!shape || shape.type !== 'text') return;
-
     setEditingTextId(shapeId);
+    setIsTextEditing(true);
+  }, []);
 
-    // Calculate positioning relative to canvas
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    // Create container to hold the textarea and controls
-    const container = document.createElement('div');
-    container.style.cssText = `
-      position: absolute;
-      left: ${shape.x}px;
-      top: ${shape.y - 50}px;
-      z-index: 1000;
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    `;
-    
-    // Create text controls panel
-    const controlsPanel = document.createElement('div');
-    controlsPanel.style.cssText = `
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      background: ${theme === 'light' ? '#ffffff' : '#1f2937'};
-      border: 1px solid ${theme === 'light' ? '#e5e7eb' : '#374151'};
-      border-radius: 6px;
-      padding: 6px 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      pointer-events: auto;
-      font-size: 12px;
-    `;
-    
-    // Font size control
-    const fontSizeLabel = document.createElement('label');
-    fontSizeLabel.textContent = 'Size:';
-    fontSizeLabel.style.cssText = `
-      color: ${theme === 'light' ? '#374151' : '#f9fafb'};
-      font-weight: 500;
-    `;
-    
-    const fontSizeInput = document.createElement('input');
-    fontSizeInput.type = 'number';
-    fontSizeInput.value = ((shape as any).fontSize || 16).toString();
-    fontSizeInput.min = '8';
-    fontSizeInput.max = '72';
-    fontSizeInput.style.cssText = `
-      width: 60px;
-      padding: 2px 4px;
-      border: 1px solid ${theme === 'light' ? '#d1d5db' : '#4b5563'};
-      border-radius: 3px;
-      background: ${theme === 'light' ? '#ffffff' : '#374151'};
-      color: ${theme === 'light' ? '#374151' : '#f9fafb'};
-      font-size: 12px;
-    `;
-    
-    // Color control
-    const colorLabel = document.createElement('label');
-    colorLabel.textContent = 'Color:';
-    colorLabel.style.cssText = `
-      color: ${theme === 'light' ? '#374151' : '#f9fafb'};
-      font-weight: 500;
-    `;
-    
-    const colorInput = document.createElement('input');
-    colorInput.type = 'color';
-    colorInput.value = shape.stroke || currentColor;
-    colorInput.style.cssText = `
-      width: 40px;
-      height: 24px;
-      border: 1px solid ${theme === 'light' ? '#d1d5db' : '#4b5563'};
-      border-radius: 3px;
-      cursor: pointer;
-    `;
-    
-    // Font family control
-    const fontFamilySelect = document.createElement('select');
-    fontFamilySelect.style.cssText = `
-      padding: 2px 4px;
-      border: 1px solid ${theme === 'light' ? '#d1d5db' : '#4b5563'};
-      border-radius: 3px;
-      background: ${theme === 'light' ? '#ffffff' : '#374151'};
-      color: ${theme === 'light' ? '#374151' : '#f9fafb'};
-      font-size: 12px;
-    `;
-    
-    const fonts = ['Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Georgia', 'Verdana', 'Comic Sans MS', 'Impact'];
-    fonts.forEach(font => {
-      const option = document.createElement('option');
-      option.value = font;
-      option.textContent = font;
-      if (font === ((shape as any).fontFamily || currentFont)) {
-        option.selected = true;
-      }
-      fontFamilySelect.appendChild(option);
-    });
-    
-    // Bold/Italic controls
-    const boldButton = document.createElement('button');
-    boldButton.textContent = 'B';
-    boldButton.style.cssText = `
-      width: 24px;
-      height: 24px;
-      border: 1px solid ${theme === 'light' ? '#d1d5db' : '#4b5563'};
-      border-radius: 3px;
-      background: ${(shape as any).fontWeight === 'bold' ? '#6366f1' : (theme === 'light' ? '#ffffff' : '#374151')};
-      color: ${(shape as any).fontWeight === 'bold' ? 'white' : (theme === 'light' ? '#374151' : '#f9fafb')};
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 12px;
-    `;
-    
-    // Assemble controls panel
-    controlsPanel.appendChild(fontSizeLabel);
-    controlsPanel.appendChild(fontSizeInput);
-    controlsPanel.appendChild(colorLabel);
-    controlsPanel.appendChild(colorInput);
-    controlsPanel.appendChild(fontFamilySelect);
-    controlsPanel.appendChild(boldButton);
-    
-    const textInput = document.createElement('textarea');
-    textInput.value = shape.text || '';
-    textInput.style.cssText = `
-      position: relative;
-      padding: 4px 8px;
-      border: 2px solid #3b82f6;
-      border-radius: 4px;
-      background: ${theme === 'light' ? '#ffffff' : '#1f2937'};
-      color: ${shape.stroke || currentColor};
-      font-size: ${(shape as any).fontSize || 16}px;
-      font-family: ${(shape as any).fontFamily || currentFont};
-      font-weight: ${(shape as any).fontWeight || 'normal'};
-      min-width: 50px;
-      min-height: 24px;
-      max-width: 400px;
-      resize: none;
-      outline: none;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      line-height: 1.2;
-      overflow: hidden;
-      white-space: pre-wrap;
-      pointer-events: auto;
-    `;
+  const finishTextEditing = useCallback(() => {
+    setEditingTextId(null);
+    setIsTextEditing(false);
+  }, []);
 
-    // Auto-resize function
-    const autoResize = () => {
-      // Reset height to recalculate
-      textInput.style.height = 'auto';
-      textInput.style.height = Math.max(24, textInput.scrollHeight) + 'px';
-      
-      // Calculate width based on content
-      const tempDiv = document.createElement('div');
-      tempDiv.style.cssText = `
-        position: absolute;
-        visibility: hidden;
-        height: auto;
-        width: auto;
-        white-space: pre;
-        font: ${textInput.style.font};
-        padding: ${textInput.style.padding};
-        border: ${textInput.style.border};
-      `;
-      tempDiv.textContent = textInput.value || 'W';
-      document.body.appendChild(tempDiv);
-      
-      const contentWidth = tempDiv.offsetWidth;
-      document.body.removeChild(tempDiv);
-      
-      textInput.style.width = Math.min(Math.max(50, contentWidth + 10), 400) + 'px';
-    };
-
-    // Update text properties in real-time
-    const updateTextProperties = () => {
-      const fontSize = parseInt(fontSizeInput.value);
-      const color = colorInput.value;
-      const fontFamily = fontFamilySelect.value;
-      const fontWeight = boldButton.style.background.includes('6366f1') ? 'bold' : 'normal';
-      
-      // Update textarea styling
-      textInput.style.fontSize = fontSize + 'px';
-      textInput.style.color = color;
-      textInput.style.fontFamily = fontFamily;
-      textInput.style.fontWeight = fontWeight;
-      
-      // Update the shape immediately
-      updateShape(shapeId, {
-        fontSize: fontSize,
-        stroke: color,
-        fontFamily: fontFamily,
-        fontWeight: fontWeight
-      });
-      
-      autoResize();
-    };
-
-    // Add event listeners for controls
-    fontSizeInput.addEventListener('input', updateTextProperties);
-    colorInput.addEventListener('input', updateTextProperties);
-    fontFamilySelect.addEventListener('change', updateTextProperties);
-    boldButton.addEventListener('click', () => {
-      const isBold = boldButton.style.background.includes('6366f1');
-      boldButton.style.background = isBold ? (theme === 'light' ? '#ffffff' : '#374151') : '#6366f1';
-      boldButton.style.color = isBold ? (theme === 'light' ? '#374151' : '#f9fafb') : 'white';
-      updateTextProperties();
-    });
-
-    container.appendChild(controlsPanel);
-    container.appendChild(textInput);
-    canvas.parentElement?.appendChild(container);
-    
-    textInput.focus();
-    textInput.select();
-
-    // Initial resize
-    setTimeout(autoResize, 10);
-
-    // Auto-resize on input
-    textInput.addEventListener('input', autoResize);
-
-    const finishEditing = () => {
-      const text = textInput.value;
-      
-      if (text.trim()) {
-        // Get current properties from controls
-        const fontSize = parseInt(fontSizeInput.value);
-        const color = colorInput.value;
-        const fontFamily = fontFamilySelect.value;
-        const fontWeight = boldButton.style.background.includes('6366f1') ? 'bold' : 'normal';
-        
-        // Calculate text dimensions for the shape
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d')!;
-        tempCtx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
-        
-        const lines = text.split('\n');
-        const maxWidth = Math.max(...lines.map(line => tempCtx.measureText(line).width));
-        const height = lines.length * fontSize * 1.2;
-        
-        // Update the shape with all properties
-        updateShape(shapeId, { 
-          text,
-          fontSize,
-          stroke: color,
-          fontFamily,
-          fontWeight,
-          width: Math.max(50, maxWidth + 10),
-          height: Math.max(24, height)
-        });
-      } else {
+  const cancelTextEditing = useCallback(() => {
+    if (editingTextId) {
+      const textShape = shapes[editingTextId];
+      if (textShape && textShape.type === 'text' && textShape.text.trim() === '') {
         // Delete empty text shapes
-        deleteShape(shapeId);
+        deleteShape(editingTextId);
       }
+    }
+    setEditingTextId(null);
+    setIsTextEditing(false);
+  }, [editingTextId, shapes, deleteShape]);
+
+  const updateTextShape = useCallback((updates: Partial<TextShape>) => {
+    if (editingTextId) {
+      updateShape(editingTextId, updates);
+    }
+  }, [editingTextId, updateShape]);
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle shortcuts when text editing
+      if (!isTextEditing) return;
       
-      // Clean up
-      if (container.parentElement) {
-        container.parentElement.removeChild(container);
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        finishTextEditing();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelTextEditing();
       }
-      setEditingTextId(null);
     };
 
-    // Handle finishing text editing
-    textInput.addEventListener('blur', finishEditing);
-    textInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        finishEditing();
-      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        finishEditing();
-      }
-      // Allow normal Enter for new lines
-    });
-  }, [shapes, theme, currentFont, updateShape, deleteShape]);
-
-  // Redraw when shapes or settings change
-  useEffect(() => {
-    redrawCanvas();
-  }, [redrawCanvas]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isTextEditing, finishTextEditing, cancelTextEditing]);
 
   // Handle mouse down
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (tool === 'hand' || tool === 'select') return;
+    // Disable interactions while text editing
+    if (isTextEditing) return;
 
     const pos = getMousePos(e);
+
+    // Check if we're clicking on an existing shape for dragging or selection (when selection tool is active)
+    if (tool === 'select') {
+      const shapeUnderMouse = getShapeUnderMouse(pos);
+      if (shapeUnderMouse) {
+        setSelectedShapeId(shapeUnderMouse.id);
+        setIsDragging(true);
+        setDraggedShapeId(shapeUnderMouse.id);
+        setDragOffset({
+          x: pos.x - shapeUnderMouse.x,
+          y: pos.y - shapeUnderMouse.y
+        });
+        return;
+      } else {
+        // Clear selection if clicking on empty space
+        setSelectedShapeId(null);
+      }
+    }
+
+    if (tool === 'hand' || tool === 'select') return;
+
     setIsDrawing(true);
     setStartPoint(pos);
     clearSelection();
@@ -503,11 +313,26 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
     }
 
     if (tool === 'text') {
-      // Create text shape immediately and enter edit mode
-      const style = {
+      // Create text shape with default properties
+      const textShape = {
+        type: 'text' as const,
+        x: pos.x,
+        y: pos.y,
+        width: 200,
+        height: 30,
+        rotation: 0,
+        text: '',
+        fontSize: 16, // Default 16px as requested
+        fontFamily: 'Arial', // Default Arial as requested
+        fontWeight: 'normal' as const,
+        textAlign: 'left' as const,
+        verticalAlign: 'top' as const,
         fill: currentBackgroundColor === 'transparent' ? 'none' : currentBackgroundColor,
+        fillStyle: 'solid' as const,
         stroke: currentColor,
-        strokeWidth: currentStrokeWidth,
+        strokeWidth: 0, // Text doesn't need stroke by default
+        strokeStyle: 'solid' as const,
+        roughness: 0,
         opacity: currentOpacity,
         visible: true,
         locked: false,
@@ -516,38 +341,43 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
         updatedAt: Date.now()
       };
 
-      const textShape = {
-        type: 'text' as const,
-        x: pos.x,
-        y: pos.y,
-        width: 200,
-        height: 30,
-        text: '',
-        fontSize: Math.max(12, currentStrokeWidth * 2 + 8), // Map stroke width to font size
-        fontFamily: currentFont,
-        fontWeight: 'normal',
-        textAlign: 'left' as const,
-        verticalAlign: 'top' as const,
-        ...style
-      };
-
       const shapeId = createShape(textShape);
       
       // Start editing the text immediately
-      setTimeout(() => {
-        startTextEditing(shapeId);
-      }, 10);
+      setEditingTextId(shapeId);
+      setIsTextEditing(true);
       
       setIsDrawing(false);
       return;
     }
-  }, [tool, getMousePos, clearSelection, currentColor, currentBackgroundColor, currentStrokeWidth, currentOpacity, currentFont, createShape, startTextEditing]);
+  }, [tool, getMousePos, clearSelection, currentColor, currentBackgroundColor, currentStrokeWidth, currentOpacity, currentFont, createShape, getShapeUnderMouse]);
 
   // Handle mouse move
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !startPoint) return;
+    // Disable interactions while text editing (except for cursor updates)
+    if (isTextEditing && !isDragging) return;
 
     const pos = getMousePos(e);
+
+    // Update cursor style when hovering over draggable shapes
+    if (tool === 'select' && !isDragging) {
+      const shapeUnderMouse = getShapeUnderMouse(pos);
+      const canvas = canvasRef.current;
+      if (canvas) {
+        canvas.style.cursor = shapeUnderMouse ? 'move' : 'default';
+      }
+    }
+
+    // Handle dragging of shapes
+    if (isDragging && draggedShapeId) {
+      const newX = pos.x - dragOffset.x;
+      const newY = pos.y - dragOffset.y;
+      
+      updateShape(draggedShapeId, { x: newX, y: newY });
+      return;
+    }
+
+    if (!isDrawing || !startPoint) return;
 
     if (tool === 'draw') {
       // Add point only if it's far enough from the last point for smoother drawing
@@ -637,10 +467,20 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
       
       ctx.restore();
     }
-  }, [isDrawing, startPoint, tool, getMousePos, currentPath, redrawCanvas, currentColor, currentStrokeWidth, currentOpacity]);
+  }, [isDrawing, startPoint, tool, getMousePos, currentPath, redrawCanvas, currentColor, currentStrokeWidth, currentOpacity, isDragging, draggedShapeId, dragOffset, updateShape, getShapeUnderMouse]);
 
   // Handle mouse up
   const handleMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    // Disable interactions while text editing
+    if (isTextEditing && !isDragging) return;
+    // Handle end of dragging
+    if (isDragging) {
+      setIsDragging(false);
+      setDraggedShapeId(null);
+      setDragOffset({ x: 0, y: 0 });
+      return;
+    }
+
     if (!isDrawing || !startPoint) return;
 
     const pos = getMousePos(e);
@@ -687,7 +527,7 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
 
     setIsDrawing(false);
     setStartPoint(null);
-  }, [isDrawing, startPoint, tool, getMousePos, currentPath, currentColor, currentBackgroundColor, currentStrokeWidth, currentOpacity, createShape]);
+  }, [isDrawing, startPoint, tool, getMousePos, currentPath, currentColor, currentBackgroundColor, currentStrokeWidth, currentOpacity, createShape, isDragging]);
 
   // Handle double click for text editing
   const handleDoubleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -744,6 +584,27 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
           setCurrentPath([]);
         }}
       />
+      
+      {/* Text Editor Component */}
+      {editingTextId && shapes[editingTextId] && shapes[editingTextId].type === 'text' && (
+        <TextEditor
+          shape={shapes[editingTextId] as TextShape}
+          onUpdate={updateTextShape}
+          onFinish={finishTextEditing}
+          onCancel={cancelTextEditing}
+          scale={1}
+          isEditing={isTextEditing}
+        />
+      )}
+      
+      {/* Resize Handles for Selected Shape */}
+      {selectedShapeId && shapes[selectedShapeId] && !isTextEditing && (
+        <ResizeHandles
+          shape={shapes[selectedShapeId]}
+          onResize={(updates) => updateShape(selectedShapeId, updates)}
+          scale={1}
+        />
+      )}
       
       {/* Tool status indicator */}
       <div style={{
