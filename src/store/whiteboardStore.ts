@@ -91,11 +91,13 @@ const createDefaultLayer = (): Layer => ({
   shapeIds: [],
 });
 
+const defaultLayer = createDefaultLayer();
+
 const initialState: WhiteboardState = {
   shapes: {},
-  layers: [createDefaultLayer()],
+  layers: [defaultLayer],
   selectedShapeIds: [],
-  activeLayerId: '',
+  activeLayerId: defaultLayer.id,
   tool: 'select' as ToolType,
   zoom: 1,
   panX: 0,
@@ -111,7 +113,7 @@ const initialState: WhiteboardState = {
   currentStrokeWidth: 2,
   currentStrokeStyle: 'solid',
   currentFillStyle: 'solid',
-  currentOpacity: 1,
+  currentOpacity: 100,
   roughness: 1,
 };
 

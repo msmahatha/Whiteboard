@@ -161,7 +161,8 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
           if (shape.text) {
             const fontSize = (shape as any).fontSize || 16;
             const fontFamily = (shape as any).fontFamily || currentFont;
-            ctx.font = `${fontSize}px ${fontFamily}`;
+            const fontWeight = (shape as any).fontWeight || 'normal';
+            ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
             ctx.fillStyle = shape.stroke || currentColor;
             
             // Handle multi-line text
@@ -210,81 +211,262 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
 
     setEditingTextId(shapeId);
 
-    // Calculate better positioning based on canvas position
+    // Calculate positioning relative to canvas
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    const rect = canvas.getBoundingClientRect();
-    const canvasX = rect.left + shape.x;
-    const canvasY = rect.top + shape.y;
-
+    // Create container to hold the textarea and controls
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: absolute;
+      left: ${shape.x}px;
+      top: ${shape.y - 50}px;
+      z-index: 1000;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    `;
+    
+    // Create text controls panel
+    const controlsPanel = document.createElement('div');
+    controlsPanel.style.cssText = `
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: ${theme === 'light' ? '#ffffff' : '#1f2937'};
+      border: 1px solid ${theme === 'light' ? '#e5e7eb' : '#374151'};
+      border-radius: 6px;
+      padding: 6px 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      pointer-events: auto;
+      font-size: 12px;
+    `;
+    
+    // Font size control
+    const fontSizeLabel = document.createElement('label');
+    fontSizeLabel.textContent = 'Size:';
+    fontSizeLabel.style.cssText = `
+      color: ${theme === 'light' ? '#374151' : '#f9fafb'};
+      font-weight: 500;
+    `;
+    
+    const fontSizeInput = document.createElement('input');
+    fontSizeInput.type = 'number';
+    fontSizeInput.value = ((shape as any).fontSize || 16).toString();
+    fontSizeInput.min = '8';
+    fontSizeInput.max = '72';
+    fontSizeInput.style.cssText = `
+      width: 60px;
+      padding: 2px 4px;
+      border: 1px solid ${theme === 'light' ? '#d1d5db' : '#4b5563'};
+      border-radius: 3px;
+      background: ${theme === 'light' ? '#ffffff' : '#374151'};
+      color: ${theme === 'light' ? '#374151' : '#f9fafb'};
+      font-size: 12px;
+    `;
+    
+    // Color control
+    const colorLabel = document.createElement('label');
+    colorLabel.textContent = 'Color:';
+    colorLabel.style.cssText = `
+      color: ${theme === 'light' ? '#374151' : '#f9fafb'};
+      font-weight: 500;
+    `;
+    
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = shape.stroke || currentColor;
+    colorInput.style.cssText = `
+      width: 40px;
+      height: 24px;
+      border: 1px solid ${theme === 'light' ? '#d1d5db' : '#4b5563'};
+      border-radius: 3px;
+      cursor: pointer;
+    `;
+    
+    // Font family control
+    const fontFamilySelect = document.createElement('select');
+    fontFamilySelect.style.cssText = `
+      padding: 2px 4px;
+      border: 1px solid ${theme === 'light' ? '#d1d5db' : '#4b5563'};
+      border-radius: 3px;
+      background: ${theme === 'light' ? '#ffffff' : '#374151'};
+      color: ${theme === 'light' ? '#374151' : '#f9fafb'};
+      font-size: 12px;
+    `;
+    
+    const fonts = ['Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Georgia', 'Verdana', 'Comic Sans MS', 'Impact'];
+    fonts.forEach(font => {
+      const option = document.createElement('option');
+      option.value = font;
+      option.textContent = font;
+      if (font === ((shape as any).fontFamily || currentFont)) {
+        option.selected = true;
+      }
+      fontFamilySelect.appendChild(option);
+    });
+    
+    // Bold/Italic controls
+    const boldButton = document.createElement('button');
+    boldButton.textContent = 'B';
+    boldButton.style.cssText = `
+      width: 24px;
+      height: 24px;
+      border: 1px solid ${theme === 'light' ? '#d1d5db' : '#4b5563'};
+      border-radius: 3px;
+      background: ${(shape as any).fontWeight === 'bold' ? '#6366f1' : (theme === 'light' ? '#ffffff' : '#374151')};
+      color: ${(shape as any).fontWeight === 'bold' ? 'white' : (theme === 'light' ? '#374151' : '#f9fafb')};
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 12px;
+    `;
+    
+    // Assemble controls panel
+    controlsPanel.appendChild(fontSizeLabel);
+    controlsPanel.appendChild(fontSizeInput);
+    controlsPanel.appendChild(colorLabel);
+    controlsPanel.appendChild(colorInput);
+    controlsPanel.appendChild(fontFamilySelect);
+    controlsPanel.appendChild(boldButton);
+    
     const textInput = document.createElement('textarea');
     textInput.value = shape.text || '';
     textInput.style.cssText = `
-      position: fixed;
-      left: ${Math.max(10, Math.min(canvasX, window.innerWidth - 300))}px;
-      top: ${Math.max(10, Math.min(canvasY, window.innerHeight - 200))}px;
-      z-index: 1000;
-      padding: 8px 12px;
+      position: relative;
+      padding: 4px 8px;
       border: 2px solid #3b82f6;
-      border-radius: 8px;
+      border-radius: 4px;
       background: ${theme === 'light' ? '#ffffff' : '#1f2937'};
-      color: ${theme === 'light' ? '#1f2937' : '#ffffff'};
+      color: ${shape.stroke || currentColor};
       font-size: ${(shape as any).fontSize || 16}px;
       font-family: ${(shape as any).fontFamily || currentFont};
-      min-width: 100px;
-      min-height: 32px;
-      max-width: 600px;
+      font-weight: ${(shape as any).fontWeight || 'normal'};
+      min-width: 50px;
+      min-height: 24px;
+      max-width: 400px;
       resize: none;
       outline: none;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-      line-height: 1.4;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      line-height: 1.2;
       overflow: hidden;
       white-space: pre-wrap;
-      transform: translateY(-4px);
+      pointer-events: auto;
     `;
 
     // Auto-resize function
     const autoResize = () => {
+      // Reset height to recalculate
       textInput.style.height = 'auto';
-      textInput.style.height = Math.max(32, textInput.scrollHeight) + 'px';
+      textInput.style.height = Math.max(24, textInput.scrollHeight) + 'px';
       
-      // Auto-resize width based on content
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
-      ctx.font = `${(shape as any).fontSize || 16}px ${(shape as any).fontFamily || currentFont}`;
+      // Calculate width based on content
+      const tempDiv = document.createElement('div');
+      tempDiv.style.cssText = `
+        position: absolute;
+        visibility: hidden;
+        height: auto;
+        width: auto;
+        white-space: pre;
+        font: ${textInput.style.font};
+        padding: ${textInput.style.padding};
+        border: ${textInput.style.border};
+      `;
+      tempDiv.textContent = textInput.value || 'W';
+      document.body.appendChild(tempDiv);
       
-      const lines = textInput.value.split('\n');
-      const maxWidth = Math.max(...lines.map(line => ctx.measureText(line).width)) + 24; // padding
-      textInput.style.width = Math.min(Math.max(100, maxWidth), 600) + 'px';
+      const contentWidth = tempDiv.offsetWidth;
+      document.body.removeChild(tempDiv);
+      
+      textInput.style.width = Math.min(Math.max(50, contentWidth + 10), 400) + 'px';
     };
 
-    document.body.appendChild(textInput);
+    // Update text properties in real-time
+    const updateTextProperties = () => {
+      const fontSize = parseInt(fontSizeInput.value);
+      const color = colorInput.value;
+      const fontFamily = fontFamilySelect.value;
+      const fontWeight = boldButton.style.background.includes('6366f1') ? 'bold' : 'normal';
+      
+      // Update textarea styling
+      textInput.style.fontSize = fontSize + 'px';
+      textInput.style.color = color;
+      textInput.style.fontFamily = fontFamily;
+      textInput.style.fontWeight = fontWeight;
+      
+      // Update the shape immediately
+      updateShape(shapeId, {
+        fontSize: fontSize,
+        stroke: color,
+        fontFamily: fontFamily,
+        fontWeight: fontWeight
+      });
+      
+      autoResize();
+    };
+
+    // Add event listeners for controls
+    fontSizeInput.addEventListener('input', updateTextProperties);
+    colorInput.addEventListener('input', updateTextProperties);
+    fontFamilySelect.addEventListener('change', updateTextProperties);
+    boldButton.addEventListener('click', () => {
+      const isBold = boldButton.style.background.includes('6366f1');
+      boldButton.style.background = isBold ? (theme === 'light' ? '#ffffff' : '#374151') : '#6366f1';
+      boldButton.style.color = isBold ? (theme === 'light' ? '#374151' : '#f9fafb') : 'white';
+      updateTextProperties();
+    });
+
+    container.appendChild(controlsPanel);
+    container.appendChild(textInput);
+    canvas.parentElement?.appendChild(container);
+    
     textInput.focus();
     textInput.select();
 
     // Initial resize
-    setTimeout(autoResize, 0);
+    setTimeout(autoResize, 10);
 
     // Auto-resize on input
     textInput.addEventListener('input', autoResize);
 
     const finishEditing = () => {
-      const text = textInput.value.trim();
+      const text = textInput.value;
       
-      if (text) {
-        // Update the shape with new text
+      if (text.trim()) {
+        // Get current properties from controls
+        const fontSize = parseInt(fontSizeInput.value);
+        const color = colorInput.value;
+        const fontFamily = fontFamilySelect.value;
+        const fontWeight = boldButton.style.background.includes('6366f1') ? 'bold' : 'normal';
+        
+        // Calculate text dimensions for the shape
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d')!;
+        tempCtx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+        
+        const lines = text.split('\n');
+        const maxWidth = Math.max(...lines.map(line => tempCtx.measureText(line).width));
+        const height = lines.length * fontSize * 1.2;
+        
+        // Update the shape with all properties
         updateShape(shapeId, { 
           text,
-          width: Math.max(100, textInput.offsetWidth),
-          height: Math.max(32, textInput.offsetHeight)
+          fontSize,
+          stroke: color,
+          fontFamily,
+          fontWeight,
+          width: Math.max(50, maxWidth + 10),
+          height: Math.max(24, height)
         });
       } else {
         // Delete empty text shapes
         deleteShape(shapeId);
       }
       
-      document.body.removeChild(textInput);
+      // Clean up
+      if (container.parentElement) {
+        container.parentElement.removeChild(container);
+      }
       setEditingTextId(null);
     };
 
@@ -293,10 +475,10 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
     textInput.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        textInput.blur();
+        finishEditing();
       } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        textInput.blur();
+        finishEditing();
       }
       // Allow normal Enter for new lines
     });
@@ -343,19 +525,23 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
         text: '',
         fontSize: Math.max(12, currentStrokeWidth * 2 + 8), // Map stroke width to font size
         fontFamily: currentFont,
+        fontWeight: 'normal',
         textAlign: 'left' as const,
+        verticalAlign: 'top' as const,
         ...style
       };
 
       const shapeId = createShape(textShape);
       
       // Start editing the text immediately
-      setTimeout(() => startTextEditing(shapeId), 10);
+      setTimeout(() => {
+        startTextEditing(shapeId);
+      }, 10);
       
       setIsDrawing(false);
       return;
     }
-  }, [tool, getMousePos, clearSelection, currentColor, currentBackgroundColor, currentStrokeWidth, currentOpacity, currentFont, createShape]);
+  }, [tool, getMousePos, clearSelection, currentColor, currentBackgroundColor, currentStrokeWidth, currentOpacity, currentFont, createShape, startTextEditing]);
 
   // Handle mouse move
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -531,17 +717,22 @@ export const SimplifiedCanvas: React.FC<SimplifiedCanvasProps> = ({ width, heigh
   }, [tool]);
 
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
+    <div style={{ 
+      position: 'relative', 
+      display: 'inline-block',
+      border: '1px solid ' + (theme === 'light' ? '#e5e7eb' : '#374151'),
+      borderRadius: '8px',
+      overflow: 'visible'
+    }}>
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
         style={{
-          border: '1px solid ' + (theme === 'light' ? '#e5e7eb' : '#374151'),
-          borderRadius: '8px',
           backgroundColor: theme === 'light' ? '#ffffff' : '#1f2937',
           cursor: getCursorStyle(),
-          display: 'block'
+          display: 'block',
+          borderRadius: '8px'
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
